@@ -4,6 +4,7 @@ import type { Match } from "csdm/common/types/match";
 import type { Perspective } from "csdm/common/types/perspective";
 import type { WeaponName } from "csdm/common/types/counter-strike";
 import type { VideoSettings } from "csdm/node/settings/settings";
+import type { HighlightsPayload } from "csdm/common/types/highlights-payload";
 
 export type GeneratePlayersEventPayload = {
 	steamIds: string[];
@@ -62,3 +63,8 @@ export const generatePlayersRoundsWithTeammatesSequences = createAction<{
 	rounds: number[];
 	preserveExistingSequences: boolean;
 }>("match/video/sequences/generatePlayersRoundsWithTeammates");
+
+export const generatePlayersHighlightsSequences =
+	createAction<HighlightsPayload>(
+		"match/video/sequences/generatePlayersHighlights",
+	);

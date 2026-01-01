@@ -108,6 +108,8 @@ export const defaultSettings: Settings = {
 		hudOverlayType: "file",
 		hudOverlayFilePath: "",
 		hudOverlayUrl: "http://localhost:1349/api/hud",
+		smoothFramerate: 0,
+		smoothPlaybackAutoPause: false,
 	},
 	playerProfile: {
 		gameModes: [],

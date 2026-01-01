@@ -168,6 +168,8 @@ export type VideoSettings = {
 	hudOverlayType: "file" | "url";
 	hudOverlayFilePath: string;
 	hudOverlayUrl: string;
+	smoothFramerate: number;
+	smoothPlaybackAutoPause: boolean;
 };
 
 type BanSettings = {

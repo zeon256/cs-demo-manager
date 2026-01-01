@@ -34,7 +34,7 @@ export function initialize(autoDownloadUpdates: boolean) {
     const notification = new Notification({
       title: i18n.t({
         id: 'notification.downloadAvailable.title',
-        message: `A new update is available!`,
+        message: "A new update is available!",
       }),
       body: i18n.t({
         id: 'notification.downloadAvailable.body',

@@ -13,6 +13,8 @@ import { OutputFolderPath } from "./output-folder-path";
 import { EncoderSoftwareSelect } from "./encoder-software-select";
 import { Ffmpeg } from "./ffmpeg/ffmpeg";
 import { FramerateInput } from "./framerate-input";
+import { SmoothFramerateInput } from "./smooth-framerate-input";
+import { SmoothPlaybackAutoPauseCheckbox } from "./smooth-playback-auto-pause-checkbox";
 import { ConcatenateSequencesCheckbox } from "./concatenate-sequences-checkbox";
 import { GeneratePlayerSequencesButton } from "./generate-player-sequences-button";
 import { DeleteSequencesButton } from "./sequences/delete-sequences-button";
@@ -57,6 +59,7 @@ export function MatchVideo() {
 									<WidthResolutionInput />
 									<HeightResolutionInput />
 									<FramerateInput />
+									<SmoothFramerateInput />
 								</div>
 							</div>
 
@@ -65,6 +68,7 @@ export function MatchVideo() {
 								<div>
 									<CloseGameAfterRecordingCheckbox />
 									<ConcatenateSequencesCheckbox />
+									<SmoothPlaybackAutoPauseCheckbox />
 								</div>
 							</div>
 						</div>

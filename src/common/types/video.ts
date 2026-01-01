@@ -32,6 +32,9 @@ export type Video = {
 	status: VideoStatus;
 	errorCode?: ErrorCode;
 	currentSequence?: number;
+	isSmooth?: boolean;
+	smoothFramerate: number;
+	smoothPlaybackAutoPause: boolean;
 };
 
 export type AddVideoPayload = Omit<

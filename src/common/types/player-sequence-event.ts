@@ -3,6 +3,7 @@ export const PlayerSequenceEvent = {
 	Deaths: "deaths",
 	Rounds: "rounds",
 	RoundsWithTeammates: "rounds-with-teammates",
+	Highlights: "highlights",
 } as const;
 
 export type PlayerSequenceEvent =

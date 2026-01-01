@@ -4429,7 +4429,6 @@ msgid "Seconds before the round starts to start the sequence"
 msgstr "Seconds before the round starts to start the sequence"
 
 #: src/ui/match/overview/scoreboard/context-menu/generate-player-rounds-video-item.tsx
-#: src/ui/match/video/generate-player-sequences-button.tsx
 msgctxt "Input label"
 msgid "Seconds after the round ends or the player dies to stop the sequence"
 msgstr "Seconds after the round ends or the player dies to stop the sequence"
@@ -5190,29 +5189,66 @@ msgid "Focus camera on player"
 msgstr "Focus camera on player"
 
 #: src/ui/match/video/framerate-input.tsx
+#: src/ui/settings/video/recording/recording-framerate.tsx
 msgctxt "Input label"
 msgid "Framerate"
 msgstr "Framerate"
 
 #: src/ui/match/video/framerate-input.tsx
+#: src/ui/settings/video/recording/recording-framerate.tsx
 msgctxt "Input placeholder"
 msgid "Framerate"
 msgstr "Framerate"
 
 #: src/ui/match/video/generate-player-sequences-button.tsx
-msgctxt "Select option"
-msgid "Kill"
-msgstr "Kill"
+msgctxt "Input label"
+msgid "Seconds before the action to start the sequence"
+msgstr "Seconds before the action to start the sequence"
 
 #: src/ui/match/video/generate-player-sequences-button.tsx
-msgctxt "Select option"
-msgid "Death"
-msgstr "Death"
+msgctxt "Input label"
+msgid "Seconds after the action to stop the sequence"
+msgstr "Seconds after the action to stop the sequence"
 
 #: src/ui/match/video/generate-player-sequences-button.tsx
-msgctxt "Select option"
-msgid "Round"
-msgstr "Round"
+msgctxt "Input label"
+msgid "Minimum Interest Score"
+msgstr "Minimum Interest Score"
+
+#: src/ui/match/video/generate-player-sequences-button.tsx
+msgid "Kills = 100, Shots = 25. The generator will group actions close to each other."
+msgstr "Kills = 100, Shots = 25. The generator will group actions close to each other."
+
+#: src/ui/match/video/generate-player-sequences-button.tsx
+msgctxt "Input label"
+msgid "Seconds before round start"
+msgstr "Seconds before round start"
+
+#: src/ui/match/video/generate-player-sequences-button.tsx
+msgctxt "Input label"
+msgid "Seconds after round end"
+msgstr "Seconds after round end"
+
+#: src/ui/match/video/generate-player-sequences-button.tsx
+#: src/ui/match/video/generate-player-sequences-button.tsx
+msgctxt "Checkbox label"
+msgid "Preserve existing sequences"
+msgstr "Preserve existing sequences"
+
+#: src/ui/match/video/generate-player-sequences-button.tsx
+msgctxt "Checkbox label"
+msgid "Include Voice Chat"
+msgstr "Include Voice Chat"
+
+#: src/ui/match/video/generate-player-sequences-button.tsx
+msgctxt "Input label"
+msgid "Seconds before voice chat"
+msgstr "Seconds before voice chat"
+
+#: src/ui/match/video/generate-player-sequences-button.tsx
+msgctxt "Input label"
+msgid "Seconds after voice chat"
+msgstr "Seconds after voice chat"
 
 #: src/ui/match/video/generate-player-sequences-button.tsx
 msgctxt "Select label"
@@ -5232,11 +5268,6 @@ msgstr "Enemy"
 #: src/ui/match/video/generate-player-sequences-button.tsx
 msgid "No action found for this player"
 msgstr "No action found for this player"
-
-#: src/ui/match/video/generate-player-sequences-button.tsx
-msgctxt "Checkbox label"
-msgid "Preserve existing sequences"
-msgstr "Preserve existing sequences"
 
 #: src/ui/match/video/generate-player-sequences-button.tsx
 msgid "If 2 actions occurred less than 10 seconds apart or 2 actions are less than 2 seconds apart, a single sequence will be generated."
@@ -5872,6 +5903,24 @@ msgctxt "Input label"
 msgid "Show only death notices"
 msgstr "Show only death notices"
 
+#: src/ui/match/video/smooth-framerate-input.tsx
+#: src/ui/settings/video/recording/recording-smooth-framerate.tsx
+msgctxt "Input label"
+msgid "Smooth mode FPS (0 = unlimited)"
+msgstr "Smooth mode FPS (0 = unlimited)"
+
+#: src/ui/match/video/smooth-framerate-input.tsx
+#: src/ui/settings/video/recording/recording-smooth-framerate.tsx
+msgctxt "Input placeholder"
+msgid "FPS"
+msgstr "FPS"
+
+#: src/ui/match/video/smooth-playback-auto-pause-checkbox.tsx
+#: src/ui/settings/video/recording/recording-smooth-playback-auto-pause.tsx
+msgctxt "Checkbox label"
+msgid "Pause between sequences (CS2 only)"
+msgstr "Pause between sequences (CS2 only)"
+
 #: src/ui/match/video/software-browse-button.tsx
 msgctxt "Button"
 msgid "Browse"
@@ -5925,6 +5974,11 @@ msgstr "An error occurred while installing VirtualDub"
 msgctxt "Button"
 msgid "Watch sequences"
 msgstr "Watch sequences"
+
+#: src/ui/match/video/watch-sequences-button.tsx
+msgctxt "Button"
+msgid "Watch smooth sequences"
+msgstr "Watch smooth sequences"
 
 #: src/ui/match/video/width-resolution-input.tsx
 msgctxt "Input label"

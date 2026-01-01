@@ -8,6 +8,7 @@ import {
 	generatePlayersKillsSequences,
 	generatePlayersRoundsSequences,
 	generatePlayersRoundsWithTeammatesSequences,
+	generatePlayersHighlightsSequences,
 	replaceSequences,
 	updateSequence,
 } from "./sequences-actions";
@@ -15,6 +16,7 @@ import { buildPlayersEventSequences } from "csdm/common/video/sequences/build-pl
 import { PlayerSequenceEvent } from "csdm/common/types/player-sequence-event";
 import { buildPlayersRoundsSequences } from "csdm/common/video/sequences/build-players-rounds-sequences";
 import { buildPlayersRoundsWithTeammatesSequences } from "csdm/common/video/sequences/build-players-rounds-with-teammates-sequences";
+import { buildPlayersHighlightsSequences } from "csdm/common/video/sequences/build-players-highlights-sequences";
 
 export type SequencesByDemoFilePath = {
 	[demoFilePath: string]: Sequence[] | undefined;
@@ -141,6 +143,24 @@ export const sequencesReducer = createReducer(initialState, (builder) => {
 				state[match.demoFilePath] = [...existingSequences, ...sequences];
 			} else {
 				state[match.demoFilePath] = sequences;
+			}
+		})
+		.addCase(generatePlayersHighlightsSequences, (state, action) => {
+			const {
+				match: { demoFilePath },
+				preserveExistingSequences,
+			} = action.payload;
+			const existingSequences = state[demoFilePath] ?? [];
+			const sequences = buildPlayersHighlightsSequences({
+				...action.payload,
+				firstSequenceNumber: preserveExistingSequences
+					? existingSequences.length + 1
+					: 1,
+			});
+			if (preserveExistingSequences) {
+				state[demoFilePath] = [...existingSequences, ...sequences];
+			} else {
+				state[demoFilePath] = sequences;
 			}
 		});
 });

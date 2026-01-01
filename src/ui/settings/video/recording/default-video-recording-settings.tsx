@@ -5,9 +5,12 @@ import { RecordingGameHeight } from "./recording-game-height";
 import { RecordingXRay } from "./recording-x-ray";
 import { RecordingPlayerVoices } from "./recording-player-voices";
 import { RecordingDeathNoticesDuration } from "./recording-death-notices-duration";
+import { RecordingSmoothFramerate } from "./recording-smooth-framerate";
+import { RecordingFramerate } from "./recording-framerate";
 import { RecordingShowOnlyDeathNotices } from "./recording-show-only-death-notices";
 import { RecordingAssists } from "./recording-assists";
 import { RecordingAudio } from "./recording-audio";
+import { RecordingSmoothPlaybackAutoPause } from "./recording-smooth-playback-auto-pause";
 import { HudOverlay } from "./hud-overlay";
 
 export function DefaultVideoRecordingSettings() {
@@ -19,6 +22,9 @@ export function DefaultVideoRecordingSettings() {
 			<div className="flex flex-col gap-y-8">
 				<RecordingGameWidth />
 				<RecordingGameHeight />
+				<RecordingFramerate />
+				<RecordingSmoothFramerate />
+				<RecordingSmoothPlaybackAutoPause />
 				<RecordingXRay />
 				<RecordingAssists />
 				<RecordingAudio />
