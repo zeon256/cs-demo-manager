@@ -104,6 +104,7 @@ export const defaultSettings: Settings = {
 			configFolderEnabled: false,
 			configFolderPath: "",
 		},
+		showHud: false,
 		hudOverlayEnabled: false,
 		hudOverlayType: "file",
 		hudOverlayFilePath: "",

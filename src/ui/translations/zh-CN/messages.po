@@ -5899,6 +5899,11 @@ msgstr "{cameraCount, plural, one {# 摄像机聚焦处} other {# 所有摄像�
 msgid "First camera focus point on <0>{focusPlayerName}</0>"
 msgstr "第一名聚焦的玩家：<0>{focusPlayerName}</0>"
 
+#: src/ui/match/video/show-hud-checkbox.tsx
+msgctxt "Input label"
+msgid "Show HUD"
+msgstr ""
+
 #: src/ui/match/video/show-only-death-notices-checkbox.tsx
 msgctxt "Input label"
 msgid "Show only death notices"
@@ -8087,6 +8092,15 @@ msgstr "录制时聆听玩家语音。"
 #: src/ui/settings/video/recording/recording-player-voices.tsx
 msgid "Player voices are not available in Valve Matchmaking demos!"
 msgstr "注意 Valve 官方匹配服务器的 Demo 中没有玩家语音！"
+
+#: src/ui/settings/video/recording/recording-show-hud.tsx
+msgid "Show the in-game HUD."
+msgstr ""
+
+#: src/ui/settings/video/recording/recording-show-hud.tsx
+msgctxt "Settings title"
+msgid "Show HUD"
+msgstr ""
 
 #: src/ui/settings/video/recording/recording-show-only-death-notices.tsx
 msgid "Show only death notices during recording."

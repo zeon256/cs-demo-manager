@@ -109,9 +109,5 @@ User can now configure additional padding for round boundaries in Highlights mod
     -   **Always Finish Round**: The final sequence generated for a round is automatically extended to the end of the round (`round.endTick` + `roundEndMargin`). This ensures you always watch the round's conclusion (retakes, defuses, explosions), preventing premature cuts.
 4.  **Camera & Audio Control**:
     -   **Dynamic Camera**: The camera automatically switches focus to the player responsible for the specific "interest event" at that tick. Consecutive switches are deduplicated.
-    -   **Smart Death Camera**: If the focused player dies during a sequence, the camera automatically switches to an alive teammate. The selection algorithm prioritizes:
-        1.  **Main/Selected Players**: If another selected player is alive and on the same team, they are chosen first.
-        2.  **Active Teammates**: Teammates who get a kill shortly after the death.
-        3.  **Survivors**: Teammates who survive the longest.
-        This ensures the viewer sees active gameplay and prefers the main protagonists when possible.
+    -   **Smart Death Camera**: If the focused player dies during a sequence, the camera automatically switches to an alive teammate. The selection algorithm prioritizes teammates who **get a kill** shortly after the death. If no one gets a kill, it prioritizes the teammate who **survives the longest**. This ensures the viewer sees active gameplay rather than switching to another player just about to die.
     -   **Smart Audio**: `isVoiceEnabled` is intelligently calculated. It is enabled **only** for the selected players and their **teammates**. This prevents leaking opponent voice chat, which can be confusing during playback.

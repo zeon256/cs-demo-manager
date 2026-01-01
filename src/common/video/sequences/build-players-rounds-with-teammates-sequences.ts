@@ -17,6 +17,7 @@ type Options = {
 		| "showAssists"
 		| "recordAudio"
 		| "playerVoicesEnabled"
+		| "showHud"
 	>;
 	firstSequenceNumber: number;
 };
@@ -127,6 +128,7 @@ export function buildPlayersRoundsWithTeammatesSequences({
 					startTick,
 					endTick,
 					showOnlyDeathNotices: settings.showOnlyDeathNotices,
+					showHud: settings.showHud,
 					deathNoticesDuration: settings.deathNoticesDuration,
 					showXRay: settings.showXRay,
 					showAssists: settings.showAssists,

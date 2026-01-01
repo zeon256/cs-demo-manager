@@ -5898,6 +5898,11 @@ msgstr "{cameraCount, plural, one {# camera focus point} other {# camera focus p
 msgid "First camera focus point on <0>{focusPlayerName}</0>"
 msgstr "First camera focus point on <0>{focusPlayerName}</0>"
 
+#: src/ui/match/video/show-hud-checkbox.tsx
+msgctxt "Input label"
+msgid "Show HUD"
+msgstr "Show HUD"
+
 #: src/ui/match/video/show-only-death-notices-checkbox.tsx
 msgctxt "Input label"
 msgid "Show only death notices"
@@ -8086,6 +8091,15 @@ msgstr "Listen to player voices during recording."
 #: src/ui/settings/video/recording/recording-player-voices.tsx
 msgid "Player voices are not available in Valve Matchmaking demos!"
 msgstr "Player voices are not available in Valve Matchmaking demos!"
+
+#: src/ui/settings/video/recording/recording-show-hud.tsx
+msgid "Show the in-game HUD."
+msgstr "Show the in-game HUD."
+
+#: src/ui/settings/video/recording/recording-show-hud.tsx
+msgctxt "Settings title"
+msgid "Show HUD"
+msgstr "Show HUD"
 
 #: src/ui/settings/video/recording/recording-show-only-death-notices.tsx
 msgid "Show only death notices during recording."

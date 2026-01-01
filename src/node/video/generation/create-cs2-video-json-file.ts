@@ -84,10 +84,15 @@ export async function createCs2VideoJsonFile({
 			json.addExecCommand(1, command);
 		}
 
-		json.addExecCommand(
-			1,
-			`cl_draw_only_deathnotices ${sequence.showOnlyDeathNotices ? 1 : 0}`,
-		);
+		const showOnlyDeathNotices = sequence.showHud
+			? 0
+			: sequence.showOnlyDeathNotices
+				? 1
+				: 0;
+		json.addExecCommand(1, `cl_draw_only_deathnotices ${showOnlyDeathNotices}`);
+		if (sequence.showHud) {
+			json.addExecCommand(1, "cl_drawhud 1");
+		}
 		json.addExecCommand(
 			1,
 			`mirv_deathmsg lifetime ${sequence.deathNoticesDuration}`,

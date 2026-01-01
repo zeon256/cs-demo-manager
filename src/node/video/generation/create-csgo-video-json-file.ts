@@ -84,10 +84,18 @@ export async function createCsgoVideoJsonFile({
 			json.addExecCommand(firstActionsTick, command);
 		}
 
+		const showOnlyDeathNotices = sequence.showHud
+			? 0
+			: sequence.showOnlyDeathNotices
+				? 1
+				: 0;
 		json.addExecCommand(
 			firstActionsTick,
-			`cl_draw_only_deathnotices ${sequence.showOnlyDeathNotices ? 1 : 0}`,
+			`cl_draw_only_deathnotices ${showOnlyDeathNotices}`,
 		);
+		if (sequence.showHud) {
+			json.addExecCommand(firstActionsTick, "cl_drawhud 1");
+		}
 		json.addExecCommand(
 			firstActionsTick,
 			`mirv_deathmsg lifetime ${sequence.deathNoticesDuration}`,

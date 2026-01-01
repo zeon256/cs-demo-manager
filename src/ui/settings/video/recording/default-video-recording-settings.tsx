@@ -7,6 +7,7 @@ import { RecordingPlayerVoices } from "./recording-player-voices";
 import { RecordingDeathNoticesDuration } from "./recording-death-notices-duration";
 import { RecordingSmoothFramerate } from "./recording-smooth-framerate";
 import { RecordingFramerate } from "./recording-framerate";
+import { RecordingShowHud } from "./recording-show-hud";
 import { RecordingShowOnlyDeathNotices } from "./recording-show-only-death-notices";
 import { RecordingAssists } from "./recording-assists";
 import { RecordingAudio } from "./recording-audio";
@@ -29,6 +30,7 @@ export function DefaultVideoRecordingSettings() {
 				<RecordingAssists />
 				<RecordingAudio />
 				<RecordingPlayerVoices />
+				<RecordingShowHud />
 				<RecordingShowOnlyDeathNotices />
 				{window.csdm.isWindows && <RecordingDeathNoticesDuration />}
 				<HudOverlay />

@@ -305,15 +305,6 @@ export function buildPlayersHighlightsSequences({
 					});
 
 					aliveTeammates.sort((a, b) => {
-						const aIsMain = steamIds.includes(a.steamId);
-						const bIsMain = steamIds.includes(b.steamId);
-						if (aIsMain && !bIsMain) {
-							return -1;
-						}
-						if (!aIsMain && bIsMain) {
-							return 1;
-						}
-
 						const aKill = match.kills.find(
 							(k) =>
 								k.roundNumber === round.number &&
@@ -391,6 +382,7 @@ export function buildPlayersHighlightsSequences({
 				startTick: segment.startTick,
 				endTick: segment.endTick,
 				showOnlyDeathNotices: settings.showOnlyDeathNotices,
+				showHud: settings.showHud,
 				deathNoticesDuration: settings.deathNoticesDuration,
 				showXRay: settings.showXRay,
 				showAssists: settings.showAssists,
