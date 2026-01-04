@@ -49,6 +49,7 @@ This is the most complex logic because it handles **proximity merging**:
 -   **Buffer Window**: If two separate sequences would end up with less than **2 seconds** between them, they are merged.
 -   **Camera Switching**: When merged, a new entry is added to `playerCameras` at the **midpoint tick** between the two events.
 -   **Offsets**: `startSecondsBeforeEvent` and `endSecondsAfterEvent` (user-configurable) are applied to the first and last events in a merged group.
+-   **Minimum Kills Filter**: Users can filter sequences to only include those with a minimum number of kills (e.g., to generate separate clips for Multi-kills).
 
 ### 2. Rounds with Teammate Switch (`build-players-rounds-with-teammates-sequences.ts`)
 Used for maintaining POV even after death:

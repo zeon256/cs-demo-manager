@@ -47,6 +47,7 @@ type Options = {
 	startSecondsBeforeEvent: number;
 	endSecondsAfterEvent: number;
 	firstSequenceNumber: number;
+	minKills?: number;
 };
 
 function getSteamIdToFocus(
@@ -84,6 +85,7 @@ export function buildPlayersEventSequences({
 	startSecondsBeforeEvent,
 	endSecondsAfterEvent,
 	firstSequenceNumber,
+	minKills = 1,
 }: Options) {
 	const steamIdKey =
 		event === PlayerSequenceEvent.Kills ? "killerSteamId" : "victimSteamId";
@@ -202,6 +204,17 @@ export function buildPlayersEventSequences({
 			],
 			cameras: [],
 		});
+	}
+
+	if (event === PlayerSequenceEvent.Kills && minKills > 1) {
+		return sequences
+			.filter((sequence) => sequence.playerCameras.length >= minKills)
+			.map((sequence, index) => {
+				return {
+					...sequence,
+					number: firstSequenceNumber + index,
+				};
+			});
 	}
 
 	return sequences;

@@ -123,6 +123,7 @@ function SelectPlayerDialog() {
 	const [minInterestScore, setMinInterestScore] = useState(25);
 	const [includeVoiceChat, setIncludeVoiceChat] = useState(false);
 	const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
+	const [minKills, setMinKills] = useState(1);
 
 	const onConfirm = async () => {
 		if (!selectedSteamIds) {
@@ -157,6 +158,7 @@ function SelectPlayerDialog() {
 						startSecondsBeforeEvent,
 						endSecondsAfterEvent,
 						preserveExistingSequences,
+						minKills,
 					}),
 				);
 				break;
@@ -409,6 +411,24 @@ function SelectPlayerDialog() {
 					defaultValue={endSecondsAfterEvent}
 					onChange={setEndSecondsAfterEvent}
 				/>
+
+				{selectedEvent === PlayerSequenceEvent.Kills && (
+					<div className="flex flex-col gap-y-8">
+						<label htmlFor="min-kills">
+							<Trans context="Input label">Minimum Kills</Trans>
+						</label>
+						<input
+							id="min-kills"
+							type="number"
+							min={1}
+							className="bg-gray-100 p-8 rounded"
+							value={minKills}
+							onChange={(e) => {
+								setMinKills(Number.parseInt(e.target.value, 10));
+							}}
+						/>
+					</div>
+				)}
 
 				{visibleWeapons.length > 0 ? (
 					<WeaponsFilter

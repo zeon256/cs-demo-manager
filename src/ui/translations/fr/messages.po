@@ -5267,6 +5267,11 @@ msgid "Enemy"
 msgstr "Ennemi"
 
 #: src/ui/match/video/generate-player-sequences-button.tsx
+msgctxt "Input label"
+msgid "Minimum Kills"
+msgstr ""
+
+#: src/ui/match/video/generate-player-sequences-button.tsx
 msgid "No action found for this player"
 msgstr "Aucune action trouvée pour ce joueur"
 

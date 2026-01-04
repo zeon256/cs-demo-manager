@@ -16,6 +16,7 @@ export type GeneratePlayersEventPayload = {
 	startSecondsBeforeEvent: number;
 	endSecondsAfterEvent: number;
 	preserveExistingSequences: boolean;
+	minKills?: number;
 };
 
 export const addSequence = createAction<{
