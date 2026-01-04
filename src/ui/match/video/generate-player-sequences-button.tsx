@@ -112,12 +112,12 @@ function SelectPlayerDialog() {
 	const [perspective, setPerspective] = useState<Perspective>(
 		Perspective.Player,
 	);
-	const [startSecondsBeforeEvent, setStartSecondsBeforeEvent] = useState(2);
-	const [endSecondsAfterEvent, setEndSecondsAfterEvent] = useState(2);
+	const [startSecondsBeforeEvent, setStartSecondsBeforeEvent] = useState(1);
+	const [endSecondsAfterEvent, setEndSecondsAfterEvent] = useState(1);
 	const [startSecondsBeforeVoice, setStartSecondsBeforeVoice] = useState(2);
 	const [endSecondsAfterVoice, setEndSecondsAfterVoice] = useState(2);
 	const [roundStartMargin, setRoundStartMargin] = useState(0);
-	const [roundEndMargin, setRoundEndMargin] = useState(0);
+	const [roundEndMargin, setRoundEndMargin] = useState(2);
 	const [preserveExistingSequences, setPreserveExistingSequences] =
 		useState(false);
 	const [minInterestScore, setMinInterestScore] = useState(25);
@@ -497,12 +497,13 @@ function SelectPlayerDialog() {
 										event === PlayerSequenceEvent.Highlights
 									) {
 										setStartSecondsBeforeEvent(
-											event === PlayerSequenceEvent.Highlights ? 2 : 0,
+											event === PlayerSequenceEvent.Highlights ? 1 : 0,
 										);
-										setEndSecondsAfterEvent(2);
+										setEndSecondsAfterEvent(1);
+										setRoundEndMargin(2);
 									} else {
-										setStartSecondsBeforeEvent(2);
-										setEndSecondsAfterEvent(2);
+										setStartSecondsBeforeEvent(1);
+										setEndSecondsAfterEvent(1);
 									}
 								}}
 							/>

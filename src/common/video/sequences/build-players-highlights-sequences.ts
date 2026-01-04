@@ -205,15 +205,54 @@ export function buildPlayersHighlightsSequences({
 
 		if (filteredEvents.length === 0) continue;
 
+		// === HEURISTIC: Look-ahead suppression ===
+		// Skip teammate KILLS if the main player has a KILL coming within a short window.
+		// This prevents jarring rapid camera switches when main player and teammate both get kills close together.
+		// NOTE: Deaths are NOT suppressed - they provide important context and should almost always be shown.
+		const mainPlayerPriorityWindowTicks = Math.round(0.5 * tickrate); // 0.5 seconds
+
+		// Helper: Check if a steamId belongs to a main player (selected players)
+		const isMainPlayer = (steamId: string) => steamIds.includes(steamId);
+
+		// Filter events using look-ahead suppression
+		const eventsWithLookahead = filteredEvents.filter((event, index) => {
+			// Always keep main player events
+			if (isMainPlayer(event.steamId)) {
+				return true;
+			}
+
+			// Only apply suppression to teammate KILLS, not deaths or other events
+			// Deaths provide important context and should be shown
+			if (event.type !== "kill") {
+				return true;
+			}
+
+			// For teammate kills, check if main player has a kill coming soon
+			const upcomingMainPlayerKill = filteredEvents.slice(index + 1).find(
+				(e) =>
+					isMainPlayer(e.steamId) &&
+					e.type === "kill" && // Only suppress for main player KILLS
+					e.tick > event.tick &&
+					e.tick - event.tick <= mainPlayerPriorityWindowTicks,
+			);
+
+			if (upcomingMainPlayerKill) {
+				// Skip this teammate kill to maintain main player continuity
+				return false;
+			}
+
+			return true;
+		});
+
 		// Group events into segments
 		const segments: {
 			startTick: number;
 			endTick: number;
-			cameraFocus: { tick: number; steamId: string }[];
+			cameraFocus: { tick: number; steamId: string; score: number }[];
 		}[] = [];
-		const maxGapTicks = tickrate * 30; // 30 seconds gap between interest points (increased from 5s to improve continuity)
+		const maxGapTicks = tickrate * 30; // 30 seconds gap between interest points
 
-		for (const event of filteredEvents) {
+		for (const event of eventsWithLookahead) {
 			const lastSegment =
 				segments.length > 0 ? segments[segments.length - 1] : undefined;
 			const startTick = Math.max(
@@ -230,33 +269,109 @@ export function buildPlayersHighlightsSequences({
 				lastSegment.cameraFocus.push({
 					tick: event.tick,
 					steamId: event.steamId,
+					score: event.score,
 				});
 			} else {
 				segments.push({
 					startTick,
 					endTick,
-					cameraFocus: [{ tick: event.tick, steamId: event.steamId }],
+					cameraFocus: [
+						{ tick: event.tick, steamId: event.steamId, score: event.score },
+					],
 				});
 			}
 		}
 
 		// Post-process segments to improve viewing experience
-		// Always finish the round if we have at least one sequence.
-		// This ensures we don't cut off just before the round end and improves continuity.
-		// We also apply the roundEndMargin here to potentially see the scoreboard/post-round.
+		// Extend to round end ONLY if there are events of interest after the segment's natural end.
+		// This handles "save" scenarios where the player is saving their gun and nothing interesting happens.
+		// If teammates are still fighting, we'll see events and extend; otherwise, cut short.
 		if (segments.length > 0) {
-			segments[segments.length - 1].endTick =
-				round.endTick + roundEndMargin * tickrate;
+			const lastSegment = segments[segments.length - 1];
+			const roundEndWithMargin = round.endTick + roundEndMargin * tickrate;
+
+			// Check if there are any interest events happening after the segment's natural end
+			const hasEventsAfterSegmentEnd = eventsWithLookahead.some(
+				(e) => e.tick > lastSegment.endTick && e.tick <= roundEndWithMargin,
+			);
+
+			if (hasEventsAfterSegmentEnd) {
+				// There's still action happening, extend to round end
+				lastSegment.endTick = roundEndWithMargin;
+			}
+			// Otherwise, keep the segment's natural end (last event + secondsAfterAction)
+			// This cuts the "boring" save time where nothing is happening
 		}
 
+		// === HEURISTIC: Adaptive early switch ===
+		// If the current POV has been "quiet" (no events) for a while, switch to the next player earlier.
+		// This ensures we don't watch boring moments when we could be watching the next interesting player.
+		const quietThresholdTicks = Math.round(3 * tickrate); // 3 seconds of no action = boring
+		const minLeadTimeTicks = Math.round(1 * tickrate); // At least 1 second before event
+
 		for (const segment of segments) {
-			// Create camera switches. For now, switch to the player who triggered the interest at their event tick.
-			const rawCameras = segment.cameraFocus.map((cf, index) => ({
-				tick: index === 0 ? segment.startTick : cf.tick,
-				playerSteamId: cf.steamId,
-				playerName:
-					match.players.find((p) => p.steamId === cf.steamId)?.name ?? "",
-			}));
+			// Create camera switches with adaptive timing
+			const rawCameras: {
+				tick: number;
+				playerSteamId: string;
+				playerName: string;
+			}[] = [];
+
+			for (let i = 0; i < segment.cameraFocus.length; i++) {
+				const cf = segment.cameraFocus[i];
+				const prevCf = i > 0 ? segment.cameraFocus[i - 1] : null;
+
+				let switchTick: number;
+
+				if (i === 0) {
+					// First camera in segment, use segment start
+					switchTick = segment.startTick;
+				} else if (prevCf && cf.steamId !== prevCf.steamId) {
+					// Switching to a different player - apply adaptive timing
+					const defaultSwitchTick =
+						cf.tick - Math.round(secondsBeforeAction * tickrate);
+
+					// Find the last event from the previous POV player
+					const lastEventFromPrevPOV = segment.cameraFocus
+						.slice(0, i)
+						.filter((c) => c.steamId === prevCf.steamId)
+						.pop();
+
+					if (lastEventFromPrevPOV) {
+						const quietDuration = cf.tick - lastEventFromPrevPOV.tick;
+
+						if (quietDuration > quietThresholdTicks) {
+							// Previous POV has been quiet, switch earlier (shortly after their last event)
+							const earlySwitchTick =
+								lastEventFromPrevPOV.tick + minLeadTimeTicks;
+							switchTick = Math.max(
+								earlySwitchTick,
+								prevCf.tick + minLeadTimeTicks, // Don't switch before previous event settles
+							);
+							// But don't switch LATER than default
+							switchTick = Math.min(switchTick, defaultSwitchTick);
+						} else {
+							// Previous POV still has action, use default timing
+							switchTick = defaultSwitchTick;
+						}
+					} else {
+						switchTick = defaultSwitchTick;
+					}
+
+					// Ensure we don't switch before the segment started
+					switchTick = Math.max(switchTick, segment.startTick);
+				} else {
+					// Same player, use event tick (this shouldn't generate a new camera entry anyway)
+					switchTick = cf.tick;
+				}
+
+				rawCameras.push({
+					tick: switchTick,
+					playerSteamId: cf.steamId,
+					playerName:
+						match.players.find((p) => p.steamId === cf.steamId)?.name ?? "",
+				});
+			}
 
 			const playerCameras: typeof rawCameras = [];
 
