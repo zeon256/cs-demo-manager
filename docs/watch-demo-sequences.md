@@ -4,6 +4,8 @@ The "Watch Demo Sequences" feature allows you to play back specific parts of a C
 
 ## How it works
 
+For a deep dive into the underlying technology used for recording on Windows, see [HLAE Recording on Windows](./hlae-recording.md).
+
 ### Watch Modes
 There are two ways to watch your sequences:
 - **Watch sequences**: Standard mode that prepares the game engine for high-quality recording. This mode locks the framerate and disables interpolation, which can feel "laggy" but ensures perfect frame timing.
