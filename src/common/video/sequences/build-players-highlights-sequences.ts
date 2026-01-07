@@ -206,38 +206,42 @@ export function buildPlayersHighlightsSequences({
 		if (filteredEvents.length === 0) continue;
 
 		// === HEURISTIC: Look-ahead suppression ===
-		// Skip teammate KILLS if the main player has a KILL coming within a short window.
-		// This prevents jarring rapid camera switches when main player and teammate both get kills close together.
-		// NOTE: Deaths are NOT suppressed - they provide important context and should almost always be shown.
-		const mainPlayerPriorityWindowTicks = Math.round(0.5 * tickrate); // 0.5 seconds
+		// Skip teammate events (KILLS or DEATHS) if a main player has a KILL coming within a short window.
+		// This prevents jarring rapid camera switches when the main player is in the middle of an action.
+		const mainPlayerPriorityWindowTicks = Math.round(
+			secondsBeforeAction * tickrate,
+		);
 
 		// Helper: Check if a steamId belongs to a main player (selected players)
 		const isMainPlayer = (steamId: string) => steamIds.includes(steamId);
 
 		// Filter events using look-ahead suppression
 		const eventsWithLookahead = filteredEvents.filter((event, index) => {
-			// Always keep main player events
-			if (isMainPlayer(event.steamId)) {
-				return true;
-			}
+			const eventIsMain = isMainPlayer(event.steamId);
 
-			// Only apply suppression to teammate KILLS, not deaths or other events
-			// Deaths provide important context and should be shown
-			if (event.type !== "kill") {
-				return true;
-			}
+			// Check for any upcoming KILL that should take priority over this event
+			const upcomingPriorityKill = filteredEvents.slice(index + 1).find((e) => {
+				if (e.type !== "kill") return false;
+				if (e.tick - event.tick > mainPlayerPriorityWindowTicks) return false;
+				if (e.steamId === event.steamId) return false; // Don't suppress a player's own events
 
-			// For teammate kills, check if main player has a kill coming soon
-			const upcomingMainPlayerKill = filteredEvents.slice(index + 1).find(
-				(e) =>
-					isMainPlayer(e.steamId) &&
-					e.type === "kill" && // Only suppress for main player KILLS
-					e.tick > event.tick &&
-					e.tick - event.tick <= mainPlayerPriorityWindowTicks,
-			);
+				const eIsMain = isMainPlayer(e.steamId);
 
-			if (upcomingMainPlayerKill) {
-				// Skip this teammate kill to maintain main player continuity
+				// Priority 1: If the upcoming kill is by a Main Player, it suppresses EVERYTHING else
+				// (including teammate kills and any deaths).
+				if (eIsMain) return true;
+
+				// Priority 2: If the upcoming kill is by a Teammate, it suppresses DEATHS
+				// (to maintain continuity for whoever is about to get a kill).
+				if (!eIsMain && event.type === "death") return true;
+
+				// Priority 3: A Main Player kill (at the same tick) already wins due to score sorting,
+				// so we don't need to suppress it here; we only care about distracting lead-ups.
+				return false;
+			});
+
+			if (upcomingPriorityKill) {
+				// Sacrifice this event to maintain focus on the higher-priority upcoming action
 				return false;
 			}
 
@@ -284,8 +288,7 @@ export function buildPlayersHighlightsSequences({
 
 		// Post-process segments to improve viewing experience
 		// Extend to round end ONLY if there are events of interest after the segment's natural end.
-		// This handles "save" scenarios where the player is saving their gun and nothing interesting happens.
-		// If teammates are still fighting, we'll see events and extend; otherwise, cut short.
+		// However, we ALWAYS extend to at least the round end tick to ensure the win/loss outcome is shown.
 		if (segments.length > 0) {
 			const lastSegment = segments[segments.length - 1];
 			const roundEndWithMargin = round.endTick + roundEndMargin * tickrate;
@@ -296,11 +299,13 @@ export function buildPlayersHighlightsSequences({
 			);
 
 			if (hasEventsAfterSegmentEnd) {
-				// There's still action happening, extend to round end
+				// There's still action happening (or voice), extend to round end with margin
 				lastSegment.endTick = roundEndWithMargin;
+			} else {
+				// No more interest events, but we still want to show the round outcome (win/loss message and sound)
+				// So we extend the segment to the official round end tick
+				lastSegment.endTick = Math.max(lastSegment.endTick, round.endTick);
 			}
-			// Otherwise, keep the segment's natural end (last event + secondsAfterAction)
-			// This cuts the "boring" save time where nothing is happening
 		}
 
 		// === HEURISTIC: Adaptive early switch ===

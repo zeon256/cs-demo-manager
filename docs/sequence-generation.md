@@ -104,15 +104,16 @@ User can now configure additional padding for round boundaries in Highlights mod
 2.  **Filtering**:
     -   Events are filtered by the user-defined `minInterestScore`.
     -   Voice activity is strictly filtered to the relevant steam IDs.
-3.  **Look-ahead Suppression** (Kills Only):
-    -   Before processing events, the system applies a **look-ahead filter** to prevent jarring camera switches.
-    -   If a **teammate kill** occurs and the **main player** has a **kill** within **1 second**, the teammate kill is **skipped**.
-    -   **Deaths are NOT suppressed** - they provide important context (e.g., seeing a teammate die before clutching) and should almost always be shown.
-    -   Example: Teammate gets a kill at tick 1000, main player gets a kill at tick 1050 (0.5s later). The teammate's kill is skipped to keep the camera on the main player.
+3.  **Look-ahead Suppression**:
+    -   Before processing events, the system applies a **look-ahead filter** to prevent distracting and jarring camera switches.
+    -   If any event (teammate kill, teammate death, or even a selected player's death) occurs and another **selected player** has a **kill** coming within a short window (defined by `secondsBeforeAction`), the event is **skipped**.
+    -   **Kills by selected players are never suppressed.**
+    -   This logic "sacrifices" less important context (like a teammate dying) to ensure the camera stays focused on a main player who is in the middle of a successful action.
+    -   Example: Teammate B dies at tick 1000, but Main Player A is about to get a kill at tick 1010. The system skips the switch to B's death to keep the focus on A's upcoming kill.
 4.  **Segment Grouping**:
     -   **Merging Gap**: Events occurring within **30 seconds** (`maxGapTicks`) of each other are grouped into a single continuous sequence. This ensures better continuity between related events.
     -   **Dynamic Extension**: The segment automatically expands to encompass the earliest start and latest end of its grouped events, plus the user's `secondsBeforeAction` and `secondsAfterAction` padding.
-    -   **Intelligent Round Ending**: The final sequence is only extended to `round.endTick` (+ `roundEndMargin`) if there are **events of interest** happening after the segment's natural end. If the player is "saving" (no kills, shots, or voice activity remaining), the sequence cuts shortly after the last interesting event. This prevents long, boring stretches where nothing happens during eco-save rounds.
+    -   **Intelligent Round Ending**: The final sequence of a round is intelligently managed to avoid long periods of inactivity while ensuring closure. If there are **events of interest** (kills, shots, voice) happening after the primary action, the sequence is extended to `round.endTick` (+ `roundEndMargin`). Even in "save" scenarios where no activity remains, the system **always extends to the round end tick** to capture the win/loss message and sound. This provides a clean transition between rounds without the long, boring stretches of eco-save rounds.
 5.  **Camera & Audio Control**:
     -   **Dynamic Camera**: The camera automatically switches focus to the player responsible for the specific "interest event" at that tick. Consecutive switches are deduplicated.
     -   **Adaptive Early Switch**: Instead of always switching exactly `secondsBeforeAction` before the next event, the system checks if the current POV has been "quiet" (no events for **3+ seconds**). If quiet, it switches to the next player **earlier** (1 second after the current player's last event). This ensures the viewer is always watching something interesting instead of staring at a player doing nothing.
