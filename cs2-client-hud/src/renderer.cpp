@@ -356,6 +356,8 @@ void HudRenderer::Render(ID3D11DeviceContext* context, IDXGISwapChain* swapChain
 
     // --- SETUP RENDER TARGET & VIEWPORT ---
     // Log("HudRenderer::Render: Creating BackBuffer RTV...");
+    
+    // Always draw to the SwapChain BackBuffer (Buffer 0) to ensure we are on the final output.
     ID3D11Texture2D* backBuffer = nullptr;
     HRESULT hr = swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
     if (FAILED(hr) || !backBuffer) {
@@ -366,6 +368,9 @@ void HudRenderer::Render(ID3D11DeviceContext* context, IDXGISwapChain* swapChain
 
     ID3D11RenderTargetView* rtv = nullptr;
     hr = device_->CreateRenderTargetView(backBuffer, nullptr, &rtv);
+    
+    D3D11_TEXTURE2D_DESC desc;
+    backBuffer->GetDesc(&desc);
     backBuffer->Release(); 
 
     if (FAILED(hr) || !rtv) {
@@ -373,15 +378,6 @@ void HudRenderer::Render(ID3D11DeviceContext* context, IDXGISwapChain* swapChain
         stateSaver.RestoreState(context);
         return;
     }
-
-    // Set Viewport
-    D3D11_TEXTURE2D_DESC desc;
-    backBuffer->GetDesc(&desc); // Wait, I released it. Safe to get desc from swapchain or re-get? 
-    // Actually, I should get desc before release. Or use cached size.
-    // Let's assume standard Viewport.
-    swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer); // Get it again safely
-    backBuffer->GetDesc(&desc);
-    backBuffer->Release();
 
     D3D11_VIEWPORT vp;
     vp.Width = (FLOAT)desc.Width;
@@ -394,7 +390,9 @@ void HudRenderer::Render(ID3D11DeviceContext* context, IDXGISwapChain* swapChain
     context->RSSetViewports(1, &vp);
     context->OMSetRenderTargets(1, &rtv, nullptr); // No depth stencil needed for 2D overlay
 
-    // Log("HudRenderer::Render: RTV & Viewport Set.");
+    // --- DRAW ---
+
+    // --- DRAW ---
 
     // --- DRAW ---
 
