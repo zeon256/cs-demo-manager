@@ -19,7 +19,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
         CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)MainThread, nullptr, 0, nullptr);
     } else if (fdwReason == DLL_PROCESS_DETACH) {
         Log("DLL_PROCESS_DETACH");
-        RemoveHooks();
+        if (lpvReserved != nullptr) {
+            Log("Process terminating. Skipping shutdown.");
+        } else {
+            RemoveHooks();
+        }
     }
     return TRUE;
 }

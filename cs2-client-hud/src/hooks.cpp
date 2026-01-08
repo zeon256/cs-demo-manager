@@ -14,7 +14,7 @@ typedef HRESULT(__fastcall* IDXGISwapChain_Present_t)(IDXGISwapChain* pSwapChain
 IDXGISwapChain_Present_t oPresent = nullptr;
 
 // Global renderer instance
-HudRenderer g_Renderer;
+HudRenderer* g_Renderer = nullptr;
 
 // Hook function
 HRESULT __fastcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags) {
@@ -27,7 +27,7 @@ HRESULT __fastcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT
         static bool init = false;
         if (!init) {
             Log("hkPresent: Initializing Renderer...");
-            if (g_Renderer.Initialize(device, context)) {
+            if (g_Renderer && g_Renderer->Initialize(device, context)) {
                 Log("hkPresent: Renderer Initialized.");
                 init = true;
             } else {
@@ -35,15 +35,18 @@ HRESULT __fastcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT
             }
         }
 
-        if (init) {
-            g_Renderer.Update();
-            g_Renderer.Render(context, pSwapChain);
+        if (init && g_Renderer) {
+            g_Renderer->Update();
+            g_Renderer->Render(context, pSwapChain);
         }
 
+        // Log("hkPresent: Releasing context...");
         context->Release();
+        // Log("hkPresent: Releasing device...");
         device->Release();
     }
 
+    // Log("hkPresent: Calling oPresent...");
     return oPresent(pSwapChain, SyncInterval, Flags);
 }
 
@@ -100,6 +103,9 @@ bool InstallHooks() {
         return false;
     }
 
+    // Initialize Renderer Instance
+    g_Renderer = new HudRenderer();
+
     Log("Getting Present address...");
     void* presentAddr = GetPresentAddress();
     if (!presentAddr) {
@@ -126,5 +132,10 @@ void RemoveHooks() {
     Log("Removing hooks...");
     MH_DisableHook(MH_ALL_HOOKS);
     MH_Uninitialize();
-    g_Renderer.Shutdown();
+    
+    if (g_Renderer) {
+        g_Renderer->Shutdown();
+        delete g_Renderer;
+        g_Renderer = nullptr;
+    }
 }

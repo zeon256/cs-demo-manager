@@ -25,4 +25,4 @@ private:
 };
 
 // Global instance access if needed, or manage via hooks
-extern HudRenderer g_Renderer;
+extern HudRenderer* g_Renderer;

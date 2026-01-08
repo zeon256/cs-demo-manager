@@ -69,6 +69,8 @@ public:
     ID3D11Buffer* vertex_buffer_ = nullptr;
     ID3D11SamplerState* sampler_state_ = nullptr;
     ID3D11BlendState* blend_state_ = nullptr;
+    ID3D11RasterizerState* rasterizer_state_ = nullptr;
+    ID3D11DepthStencilState* depth_stencil_state_ = nullptr;
     ID3D11Texture2D* texture_ = nullptr;
     ID3D11ShaderResourceView* srv_ = nullptr;
 
@@ -89,6 +91,8 @@ public:
         if (vertex_buffer_) vertex_buffer_->Release();
         if (sampler_state_) sampler_state_->Release();
         if (blend_state_) blend_state_->Release();
+        if (rasterizer_state_) rasterizer_state_->Release();
+        if (depth_stencil_state_) depth_stencil_state_->Release();
         if (texture_) texture_->Release();
         if (srv_) srv_->Release();
     }
@@ -273,6 +277,28 @@ bool HudRenderer::Initialize(ID3D11Device* device, ID3D11DeviceContext* context)
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
     device->CreateBlendState(&blendDesc, &g_Impl->blend_state_);
 
+    // Rasterizer State
+    D3D11_RASTERIZER_DESC rsDesc = {};
+    rsDesc.FillMode = D3D11_FILL_SOLID;
+    rsDesc.CullMode = D3D11_CULL_NONE;
+    rsDesc.FrontCounterClockwise = FALSE;
+    rsDesc.DepthBias = 0;
+    rsDesc.DepthBiasClamp = 0.0f;
+    rsDesc.SlopeScaledDepthBias = 0.0f;
+    rsDesc.DepthClipEnable = TRUE;
+    rsDesc.ScissorEnable = TRUE;
+    rsDesc.MultisampleEnable = FALSE;
+    rsDesc.AntialiasedLineEnable = FALSE;
+    device->CreateRasterizerState(&rsDesc, &g_Impl->rasterizer_state_);
+
+    // Depth-Stencil State
+    D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+    dsDesc.DepthEnable = FALSE;
+    dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+    dsDesc.StencilEnable = FALSE;
+    device->CreateDepthStencilState(&dsDesc, &g_Impl->depth_stencil_state_);
+
     Log("HudRenderer::Initialize success");
     initialized_ = true;
     return true;
@@ -377,12 +403,12 @@ void HudRenderer::Render(ID3D11DeviceContext* context, IDXGISwapChain* swapChain
     context->RSSetScissorRects(1, &scissor);
 
     // Set State
-    // Log("HudRenderer::Render: Setting BlendState...");
-    // if (g_Impl->blend_state_) {
-    //    float blendFactor[] = { 0.f, 0.f, 0.f, 0.f };
-    //    context->OMSetBlendState(g_Impl->blend_state_, blendFactor, 0xffffffff);
-    // }
-    
+    // Log("HudRenderer::Render: Setting States...");
+    float blendFactor[] = { 0.f, 0.f, 0.f, 0.f };
+    if (g_Impl->blend_state_) context->OMSetBlendState(g_Impl->blend_state_, blendFactor, 0xffffffff);
+    if (g_Impl->rasterizer_state_) context->RSSetState(g_Impl->rasterizer_state_);
+    if (g_Impl->depth_stencil_state_) context->OMSetDepthStencilState(g_Impl->depth_stencil_state_, 0);
+
     // Log("HudRenderer::Render: Setting VertexBuffers...");
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
