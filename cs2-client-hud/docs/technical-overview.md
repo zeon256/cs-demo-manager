@@ -96,8 +96,32 @@ When you close CS2, the game forcefully unloads all DLLs. If we have global obje
 
 ---
 
-## Summary of Success
-*   ✅ **Visibility**: HUD is rendered via D3D11 overlay.
-*   ✅ **Recording**: Chained hooks ensure HLAE captures the HUD.
-*   ✅ **Performance**: State saving/restoring keeps Source 2 happy.
-*   ✅ **Stability**: Graceful termination prevents crashes on exit.
+## 5. Problems Encountered & Lessons Learned
+
+Developing an internal overlay for a high-performance engine like Source 2 presented several technical hurdles.
+
+### A. The "Invisible HUD" (Hook Order Race)
+*   **Problem**: The HUD was clearly visible on the player's monitor, but the final HLAE video files were missing it entirely.
+*   **Why**: HLAE captures the frame by hooking `Present`. Our initial `MinHook` implementation was being called *after* HLAE had already saved the frame.
+*   **Failed Solution**: Simply changing the hook priority didn't work because HLAE uses VTable hooks which are "closer" to the object.
+*   **Fix**: The **Hybrid Hook**. We use MinHook just to find the object, then manually overwrite the VTable to ensure we are the *first* in line. We draw our HUD, then "chain" the call to whatever was there before us (HLAE).
+
+### B. "Raw Files Not Found" (Breaking the Chain)
+*   **Problem**: After fixing visibility, HLAE started failing to record entirely, throwing "Raw files not found" errors.
+*   **Why**: Our VTable hook was calling the *original driver function* (`oPresent` trampoline) instead of the *original VTable pointer*. This "jumped over" HLAE's hook, effectively disabling HLAE's capture logic.
+*   **Fix**: We now store `g_oPresentVTable` (the address HLAE was using) and call that specifically. 
+
+### C. The "Crash on Exit" (DLL Lifecycle)
+*   **Problem**: The game worked perfectly but crashed 100% of the time when closing.
+*   **Why**: Global C++ objects have their destructors called during `DLL_PROCESS_DETACH`. By that time, the D3D11 device or driver might already be unloaded by the OS. Calling `Release()` on a dead device causes an Access Violation.
+*   **Fix**: Never use global objects for D3D resources in a DLL. We use a pointer and **intentionally leak it** if the process is terminating (`lpReserved != NULL`). The OS will clean up the memory anyway, and we avoid running dangerous destructor code.
+
+### D. Graphics Pipeline Corruption
+*   **Problem**: Drawing the HUD caused the game's world to flicker or turn black.
+*   **Why**: Modern games use "Sticky States". If the game sets a "Compute Shader" and we then try to draw a 2D quad without unbinding it, the GPU tries to use a 3D shader to draw our 2D HUD.
+*   **Fix**: `D3D11StateSaver`. We meticulously save the entire state, **explicitly nullify** every shader stage (VS, PS, GS, HS, DS, CS), draw our HUD, and then restore everything.
+
+### E. Resolution & Render Target Mismatch
+*   **Problem**: HUD was missing when recording at high resolutions.
+*   **Why**: HLAE sometimes renders to an off-screen buffer that is larger than the window. If we only draw to the "BackBuffer" of the SwapChain, we miss this internal recording buffer.
+*   **Fix**: We detect the currently bound Render Target using `OMGetRenderTargets`. If the game/HLAE has a buffer bound, we draw to that. If not, we fall back to the SwapChain.

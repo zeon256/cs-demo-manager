@@ -252,7 +252,7 @@ export function buildPlayersHighlightsSequences({
 		const segments: {
 			startTick: number;
 			endTick: number;
-			cameraFocus: { tick: number; steamId: string; score: number }[];
+			cameraFocus: { tick: number; steamId: string; score: number; type: "kill" | "death" | "shot" | "voice" }[];
 		}[] = [];
 		const maxGapTicks = tickrate * 30; // 30 seconds gap between interest points
 
@@ -274,13 +274,14 @@ export function buildPlayersHighlightsSequences({
 					tick: event.tick,
 					steamId: event.steamId,
 					score: event.score,
+					type: event.type,
 				});
 			} else {
 				segments.push({
 					startTick,
 					endTick,
 					cameraFocus: [
-						{ tick: event.tick, steamId: event.steamId, score: event.score },
+						{ tick: event.tick, steamId: event.steamId, score: event.score, type: event.type },
 					],
 				});
 			}
@@ -322,60 +323,106 @@ export function buildPlayersHighlightsSequences({
 				playerName: string;
 			}[] = [];
 
+			// Multi-kill sequence detection window (same as merge window)
+			const multiKillWindowTicks = Math.round(10 * tickrate);
+			let lastCameraSteamId: string | null = null;
+
 			for (let i = 0; i < segment.cameraFocus.length; i++) {
 				const cf = segment.cameraFocus[i];
 				const prevCf = i > 0 ? segment.cameraFocus[i - 1] : null;
 
-				let switchTick: number;
+				let switchTick: number = cf.tick; // Default to event tick
+				let shouldSwitch = true;
 
 				if (i === 0) {
 					// First camera in segment, use segment start
 					switchTick = segment.startTick;
-				} else if (prevCf && cf.steamId !== prevCf.steamId) {
-					// Switching to a different player - apply adaptive timing
-					const defaultSwitchTick =
-						cf.tick - Math.round(secondsBeforeAction * tickrate);
-
-					// Find the last event from the previous POV player
-					const lastEventFromPrevPOV = segment.cameraFocus
+					lastCameraSteamId = cf.steamId;
+				} else if (lastCameraSteamId !== null && cf.steamId !== lastCameraSteamId) {
+					const cfIsMain = isMainPlayer(cf.steamId);
+					const currentCameraIsMain = isMainPlayer(lastCameraSteamId);
+					// Check if the CURRENT CAMERA PLAYER is in an active multi-kill sequence
+					// Look for both upcoming AND recent kills to determine if they're truly in a streak
+					const currentCameraRecentKills = segment.cameraFocus
 						.slice(0, i)
-						.filter((c) => c.steamId === prevCf.steamId)
-						.pop();
-
-					if (lastEventFromPrevPOV) {
-						const quietDuration = cf.tick - lastEventFromPrevPOV.tick;
-
-						if (quietDuration > quietThresholdTicks) {
-							// Previous POV has been quiet, switch earlier (shortly after their last event)
-							const earlySwitchTick =
-								lastEventFromPrevPOV.tick + minLeadTimeTicks;
-							switchTick = Math.max(
-								earlySwitchTick,
-								prevCf.tick + minLeadTimeTicks, // Don't switch before previous event settles
+						.filter((past) => {
+							return (
+								past.steamId === lastCameraSteamId &&
+								past.type === "kill" &&
+								cf.tick - past.tick <= multiKillWindowTicks
 							);
-							// But don't switch LATER than default
-							switchTick = Math.min(switchTick, defaultSwitchTick);
-						} else {
-							// Previous POV still has action, use default timing
-							switchTick = defaultSwitchTick;
+						});
+					const currentCameraUpcomingKills = segment.cameraFocus
+						.slice(i + 1)
+						.filter((future) => {
+							return (
+								future.steamId === lastCameraSteamId &&
+								future.type === "kill" &&
+								future.tick - cf.tick <= multiKillWindowTicks
+							);
+						});
+					// Determine if the current camera player is in an active multi-kill sequence
+					const currentCameraInMultiKillSequence =
+						currentCameraRecentKills.length >= 1 && currentCameraUpcomingKills.length >= 1;
+					if (currentCameraInMultiKillSequence) {
+						// The current camera player is in an active multi-kill sequence (has kills before AND after this point)
+						// Only switch away if the NEW player is a main player and has a higher-priority event
+						// at the exact same tick (handled by score sorting earlier)
+						const isSimultaneousMainPlayerEvent = cfIsMain && !currentCameraIsMain && cf.tick === prevCf?.tick;
+						if (!isSimultaneousMainPlayerEvent) {
+							// Skip this switch to maintain focus on the active sequence
+							shouldSwitch = false;
 						}
-					} else {
-						switchTick = defaultSwitchTick;
 					}
 
-					// Ensure we don't switch before the segment started
-					switchTick = Math.max(switchTick, segment.startTick);
+					if (shouldSwitch) {
+						// Switching to a different player - apply adaptive timing
+						const defaultSwitchTick =
+							cf.tick - Math.round(secondsBeforeAction * tickrate);
+
+						// Find the last event from the current camera player
+						const lastEventFromCurrentCamera = segment.cameraFocus
+							.slice(0, i)
+							.filter((c) => c.steamId === lastCameraSteamId)
+							.pop();
+
+						if (lastEventFromCurrentCamera) {
+							const quietDuration = cf.tick - lastEventFromCurrentCamera.tick;
+							if (quietDuration > quietThresholdTicks) {
+								// Current camera has been quiet, switch earlier (shortly after their last event)
+								const earlySwitchTick =
+									lastEventFromCurrentCamera.tick + minLeadTimeTicks;
+								switchTick = Math.max(
+									earlySwitchTick,
+									lastEventFromCurrentCamera.tick + minLeadTimeTicks,
+								);
+								// But don't switch LATER than default
+								switchTick = Math.min(switchTick, defaultSwitchTick);
+							} else {
+								// Current camera still has action, use default timing
+								switchTick = defaultSwitchTick;
+							}
+						} else {
+							switchTick = defaultSwitchTick;
+						}
+						// Ensure we don't switch before the segment started
+						switchTick = Math.max(switchTick, segment.startTick);
+						// Update the current camera player since we're switching
+						lastCameraSteamId = cf.steamId;
+					}
 				} else {
 					// Same player, use event tick (this shouldn't generate a new camera entry anyway)
 					switchTick = cf.tick;
 				}
 
-				rawCameras.push({
-					tick: switchTick,
-					playerSteamId: cf.steamId,
-					playerName:
-						match.players.find((p) => p.steamId === cf.steamId)?.name ?? "",
-				});
+				if (shouldSwitch) {
+					rawCameras.push({
+						tick: switchTick,
+						playerSteamId: cf.steamId,
+						playerName:
+							match.players.find((p) => p.steamId === cf.steamId)?.name ?? "",
+					});
+				}
 			}
 
 			const playerCameras: typeof rawCameras = [];

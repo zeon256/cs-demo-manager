@@ -455,9 +455,9 @@ void HudRenderer::Render(ID3D11DeviceContext* context, IDXGISwapChain* swapChain
     context->PSSetShaderResources(0, 1, &nullSRV);
 
     // Restore State
-    Log("HudRenderer::Render: Restoring State...");
+    // Log("HudRenderer::Render: Restoring State...");
     stateSaver.RestoreState(context); 
-    Log("HudRenderer::Render: State Restored.");
+    // Log("HudRenderer::Render: State Restored.");
     
     // Log("HudRenderer::Render: Skipped Draw for debugging.");
 }
